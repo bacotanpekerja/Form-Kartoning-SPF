@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Form Kartoning SPF</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f0f1f3;
+    color: #222;
+    padding: 16px;
+    max-width: 1000px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+  .copyright { text-align: center; font-size: 11px; color: #999; margin-bottom: 6px; }
+  .info-aktivasi {
+    text-align: center; font-size: 12px; font-weight: 600; color: #1a8a4c;
+    background: #e6f7ee; border-radius: 8px; padding: 8px; margin-bottom: 12px;
+  }
+  h1 { font-size: 20px; text-align: center; margin-bottom: 16px; color: #1a1a1a; }
+  .card { background: #fff; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); padding: 18px; margin-bottom: 16px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 6px; color: #444; }
+  label:first-child { margin-top: 0; }
+  input, textarea {
+    width: 100%; padding: 12px 14px; font-size: 16px;
+    border: 1px solid #d5d8dc; border-radius: 10px; background: #fafbfc;
+    box-sizing: border-box; font-family: inherit;
+  }
+  input:focus, textarea:focus { outline: none; border-color: #4a7fe0; background: #fff; }
+  button {
+    width: 100%; padding: 14px 10px; font-size: 15px; font-weight: 600;
+    border: none; border-radius: 10px; cursor: pointer; margin-top: 12px;
+  }
+  .btn-primary { background: #2f6fed; color: #fff; }
+  button:active { transform: scale(0.98); }
+
+  .table-container { max-height: 60vh; overflow: auto; border: 1px solid #e2e4e8; border-radius: 10px; margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border: 1px solid #e2e4e8; padding: 8px 6px; text-align: center; white-space: nowrap; }
+  thead th {
+    position: sticky; top: 0; background: #eef2ff; color: #2f4fd0; z-index: 2;
+  }
+  thead th:first-child, tbody td:first-child {
+    position: sticky; left: 0; background: #fff; z-index: 1;
+  }
+  thead th:first-child { background: #eef2ff; z-index: 3; }
+  tr.delay { background: #fff8e1; }
+  td input { width: 90px; padding: 6px; font-size: 13px; }
+
+  #rekap { margin-top: 16px; background: #f7f8fa; border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.8; }
+  #rekap h3 { font-size: 15px; margin-bottom: 8px; color: #1a1a1a; }
+
+  /* Gerbang Aktivasi */
+  .gate-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; overflow-y: auto; z-index: 300;
+  }
+  .gate-box { background: #fff; border-radius: 14px; padding: 26px 22px; max-width: 360px; width: 100%; text-align: center; }
+  .gate-box h2 { font-size: 18px; margin-bottom: 10px; }
+  .gate-box p { font-size: 13px; color: #555; margin-bottom: 16px; line-height: 1.4; }
+  .gate-box input { text-align: center; letter-spacing: 1px; margin-bottom: 14px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<!-- GERBANG AKTIVASI -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-box">
+    <h2>🔒 Aktivasi Diperlukan</h2>
+    <p id="gateMessage">Masukkan kunci aktivasi untuk menggunakan aplikasi ini.</p>
+    <input type="text" id="inputKunci" placeholder="Contoh: FMH-311220261830-1234"
+      autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false">
+    <button class="btn-primary" onclick="cekAktivasi()">AKTIFKAN</button>
+  </div>
+</div>
+
+<!-- KONTEN APLIKASI -->
+<div id="appContent" style="display:none;">
+
+<div class="copyright">© Febri Muhammad Husni</div>
+<div class="info-aktivasi" id="infoAktivasi"></div>
+<h1>📦 KALKULATOR FORM KARTONING SPF</h1>
+
+<div class="card">
+  <label for="tgl">Tanggal Produksi (Default)</label>
+  <input type="date" id="tgl">
+
+  <label for="isiKarton">Jumlah Pack Dalam 1 Karton</label>
+  <input type="number" id="isiKarton" min="1" placeholder="Wajib diisi" required>
+
+  <label for="data">Stok Unbox (1 angka per baris)</label>
+  <textarea id="data" rows="10" placeholder="366&#10;17&#10;374"></textarea>
+
+  <button class="btn-primary" onclick="proses()">PROSES</button>
+</div>
+
+<div class="card">
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Kode Produksi</th>
+          <th>Batch</th>
+          <th>Stock Unbox</th>
+          <th>Karton</th>
+          <th>Sisa Unbox</th>
+          <th>Sisa Saldo Unbox</th>
+          <th>Ket</th>
+        </tr>
+      </thead>
+      <tbody id="hasil"></tbody>
+    </table>
+  </div>
+  <div id="rekap"></div>
+</div>
+
+</div><!-- /appContent -->
+
+<script>
+/* ============================================================
+   KONFIGURASI AKTIVASI (sama dengan Kalkulator Yield Packing SPF,
+   jadi kunci dari generator yang sama bisa dipakai untuk kedua app)
+   ============================================================ */
+const SALT_AKTIVASI = "BACOTANPEKERJA2026";
+const KEY_KUNCI_TERSIMPAN = "kartoning_kunciAktivasi";
+
+let intervalAktivasi = null;
+
+function hitungChecksum(dateDigits) {
+  const str = dateDigits + SALT_AKTIVASI;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) % 9973;
+  }
+  return hash.toString().padStart(4, "0");
+}
+
+function validasiKunci(kunciMentah) {
+  const kunci = kunciMentah.replace(/\s+/g, "").toUpperCase();
+  const parts = kunci.split("-");
+  if (parts.length !== 3 || parts[0] !== "FMH") return null;
+
+  const dateDigits = parts[1];
+  const checksum = parts[2];
+  if (dateDigits.length !== 12 || checksum.length !== 4) return null;
+  if (!/^\d{12}$/.test(dateDigits) || !/^\d{4}$/.test(checksum)) return null;
+  if (hitungChecksum(dateDigits) !== checksum) return null;
+
+  const tgl = parseInt(dateDigits.substring(0, 2), 10);
+  const bln = parseInt(dateDigits.substring(2, 4), 10) - 1;
+  const thn = parseInt(dateDigits.substring(4, 8), 10);
+  const jam = parseInt(dateDigits.substring(8, 10), 10);
+  const menit = parseInt(dateDigits.substring(10, 12), 10);
+  const tanggalExpired = new Date(thn, bln, tgl, jam, menit, 0);
+  if (isNaN(tanggalExpired.getTime())) return null;
+
+  return tanggalExpired;
+}
+
+function formatTanggalIndo(tanggal) {
+  const namaBulan = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+  const dd = String(tanggal.getDate()).padStart(2, "0");
+  const mm = namaBulan[tanggal.getMonth()];
+  const yyyy = tanggal.getFullYear();
+  const hh = String(tanggal.getHours()).padStart(2, "0");
+  const mi = String(tanggal.getMinutes()).padStart(2, "0");
+  return `${dd} ${mm} ${yyyy}, ${hh}:${mi}`;
+}
+
+function formatSisaWaktu(ms) {
+  let totalDetik = Math.floor(ms / 1000);
+  const hari = Math.floor(totalDetik / 86400);
+  totalDetik %= 86400;
+  const jam = Math.floor(totalDetik / 3600);
+  totalDetik %= 3600;
+  const menit = Math.floor(totalDetik / 60);
+  const detik = totalDetik % 60;
+
+  let bagian = [];
+  if (hari > 0) bagian.push(hari + "h");
+  bagian.push(String(jam).padStart(2, "0") + "j");
+  bagian.push(String(menit).padStart(2, "0") + "m");
+  bagian.push(String(detik).padStart(2, "0") + "d");
+  return bagian.join(" ");
+}
+
+function mulaiCountdownAktivasi(tanggalExpired) {
+  if (intervalAktivasi) clearInterval(intervalAktivasi);
+  perbaruiCountdown(tanggalExpired);
+  intervalAktivasi = setInterval(() => perbaruiCountdown(tanggalExpired), 1000);
+}
+
+function perbaruiCountdown(tanggalExpired) {
+  const sisaMs = tanggalExpired.getTime() - new Date().getTime();
+
+  if (sisaMs <= 0) {
+    clearInterval(intervalAktivasi);
+    intervalAktivasi = null;
+    kunciKedaluwarsa();
+    return;
+  }
+
+  document.getElementById("infoAktivasi").textContent =
+    "✅ Aktif hingga " + formatTanggalIndo(tanggalExpired) + " — sisa " + formatSisaWaktu(sisaMs);
+}
+
+function kunciKedaluwarsa() {
+  localStorage.removeItem(KEY_KUNCI_TERSIMPAN);
+  document.getElementById("appContent").style.display = "none";
+  document.getElementById("gateOverlay").style.display = "flex";
+  document.getElementById("gateMessage").textContent =
+    "Kunci aktivasi sebelumnya sudah kedaluwarsa. Masukkan kunci baru.";
+  document.getElementById("inputKunci").value = "";
+  alert("⏰ Masa Aktif Sudah Habis\n\nSilakan masukkan kunci aktivasi baru untuk melanjutkan.");
+}
+
+function cekAktivasi() {
+  const kunciInput = document.getElementById("inputKunci").value;
+  const expired = validasiKunci(kunciInput);
+
+  if (!expired) {
+    alert("Kunci aktivasi tidak valid! Periksa kembali penulisannya.");
+    return;
+  }
+  if (expired.getTime() < new Date().getTime()) {
+    alert("Kunci aktivasi ini sudah kedaluwarsa. Minta kunci baru.");
+    return;
+  }
+
+  try {
+    localStorage.setItem(KEY_KUNCI_TERSIMPAN, kunciInput.replace(/\s+/g, "").toUpperCase());
+  } catch (e) {
+    console.warn("LocalStorage tidak tersedia, kunci tidak tersimpan permanen.");
+  }
+  bukaAplikasi(expired);
+}
+
+function bukaAplikasi(tanggalExpired) {
+  document.getElementById("gateOverlay").style.display = "none";
+  document.getElementById("appContent").style.display = "block";
+  mulaiCountdownAktivasi(tanggalExpired);
+}
+
+function cekKunciTersimpan() {
+  const kunciTersimpan = localStorage.getItem(KEY_KUNCI_TERSIMPAN);
+  if (!kunciTersimpan) return;
+
+  const expired = validasiKunci(kunciTersimpan);
+  if (expired && expired.getTime() >= new Date().getTime()) {
+    bukaAplikasi(expired);
+  } else {
+    localStorage.removeItem(KEY_KUNCI_TERSIMPAN);
+    document.getElementById("gateMessage").textContent =
+      "Kunci aktivasi sebelumnya sudah kedaluwarsa. Masukkan kunci baru.";
+  }
+}
+
+document.getElementById("inputKunci").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    cekAktivasi();
+  }
+});
+
+/* ============================================================
+   LOGIKA KARTONING (tidak diubah dari versi asli)
+   ============================================================ */
+function kodeProduksi(tanggal){
+ if(!tanggal) return "";
+ const p=tanggal.split("-");
+ const tahun=p[0].slice(-1);
+ const bulan=p[1];
+ const hari=p[2];
+ return "B"+tahun+bulan+hari;
+}
+
+function proses(){
+ const isi=Number(document.getElementById("isiKarton").value);
+ if(!isi || isi<1){
+   alert("Silakan isi Jumlah Pack Dalam 1 Karton terlebih dahulu.");
+   document.getElementById("isiKarton").focus();
+   return;
+ }
+ let saldo=0;
+ const t=tgl.value;
+ const kode=kodeProduksi(t);
+ const rows=data.value.trim().split(/\n+/).filter(v=>v.trim()!="");
+ let html="",total=0,no=1;
+
+ rows.forEach((v,i)=>{
+   const stok=Number(v);
+   if(isNaN(stok)) return;
+
+   const batch=i+1;
+   const isi=Number(document.getElementById("isiKarton").value);
+   const karton=Math.floor(stok/isi);
+   const sisa=stok%isi;
+   saldo+=sisa;
+   total+=karton;
+
+   html+=`
+<tr>
+<td>${no}</td>
+<td><input class="small" data-link="${no}" data-type="kode" oninput="syncDelay(this)" value="${kode}"></td>
+<td><input class="small" data-link="${no}" data-type="batch" oninput="syncDelay(this)" value="${batch}"></td>
+<td><input class="small" value="${stok}"></td>
+<td>${karton}</td>
+<td>${sisa}</td>
+<td>${saldo}</td>
+<td></td>
+</tr>`;
+
+   while(saldo>=isi){
+      saldo-=isi;
+      total++;
+      html+=`
+<tr class="delay" data-link="${no}">
+<td>${no}</td>
+<td class="delay-kode">${kode}</td>
+<td class="delay-batch">${batch}</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>${saldo}</td>
+<td>+1 Karton</td>
+</tr>`;
+   }
+   no++;
+ });
+
+ hasil.innerHTML=html;
+document.getElementById("rekap").innerHTML="<h3>REKAPAN KARTONING</h3>" +"Total Karton : <b>"+total+"</b><br><br>"+"Total Pack : <b>"+(total*(Number(document.getElementById("isiKarton").value)))+"</b><br><br>"+"Receh Akhir Batch : <b>"+saldo+" Pack</b><br><br>Jumlah Pack / Karton : <b>"+(Number(document.getElementById("isiKarton").value))+"</b>";
+}
+
+function syncDelay(el){
+  const id=el.dataset.link;
+  const row=document.querySelector('tr.delay[data-link="'+id+'"]');
+  if(!row) return;
+  if(el.dataset.type==="kode"){
+    const c=row.querySelector(".delay-kode");
+    if(c) c.textContent=el.value;
+  }
+  if(el.dataset.type==="batch"){
+    const c=row.querySelector(".delay-batch");
+    if(c) c.textContent=el.value;
+  }
+}
+
+/* ============================================================
+   JALANKAN SAAT HALAMAN DIBUKA
+   ============================================================ */
+cekKunciTersimpan();
+</script>
+</body>
+</html>
